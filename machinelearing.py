@@ -26,6 +26,11 @@ df['ts_diff2'] = df['ts2'] - df['ts']#计算其和上二次访问时的间隔
 df['hour_sin'] = np.sin(df['hour']/24*2*np.pi)#把小时放到正弦上并对其进行正余弦化
 df['hour_cos'] = np.cos(df['hour']/24*2*np.pi)#把小时放到余弦上
 
+df['min'] = df['op_datetime'].apply(lambda x: int(str(x)[-5:-3]))
+#把分钟放到正弦和余弦上
+df['min_sin'] = np.sin(df['min']/60*2*np.pi)
+df['min_cos'] = np.cos(df['min']/60*2*np.pi)
+
 LABEL = 'is_risk'
 #类型特征
 cat_f = ['user_name', 'department', 'ip_transform', 'device_num_transform', 'browser_version', 'browser',
@@ -37,6 +42,14 @@ for f in cat_f:
     df[f] = le.fit_transform(df[f])
     df[f+'_ts_diff_mean'] = df.groupby([f])['ts_diff1'].transform('mean')
     df[f+'_ts_diff_std'] = df.groupby([f])['ts_diff1'].transform('std')
+
+#log_system_transform和url进行特征组合
+df['log_url_max'] = df.apply(lambda x: max(x['log_system_transform'] , x['url']), axis=1)
+df['log_url_min'] = df.apply(lambda x: min(x['log_system_transform'] , x['url']), axis=1)
+df['log_url_jia'] = df.apply(lambda x: x['log_system_transform'] + x['url'], axis=1)
+df['log_url_cheng'] = df.apply(lambda x: x['log_system_transform'] * x['url'], axis=1)
+df['log_url_chu'] = df.apply(lambda x: x['log_system_transform'] / x['url'], axis=1)
+df['url_log_chu'] = df.apply(lambda x: x['url'] / x['log_system_transform'], axis=1)
 
 #区分训练集和测试集
 traindata = df[df[LABEL].notna()].reset_index(drop=True)
